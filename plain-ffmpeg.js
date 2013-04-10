@@ -14,10 +14,16 @@ function FFmpeg(input_path, output_path, options) {
         out: options.out || {}
     };
 
+    // Option setter
     self._option = function(opt, key, val) {
         self.options[opt][key] = (val || null);
     }
 
+    // Helper methods for setting input and output options.
+    self.in  = self._option.bind(this, 'in');
+    self.out = self._option.bind(this, 'out');
+
+    // Pushes options to an array in the right order
     self._compileOptions = function() {
         var compiled_options = [];
         for (var key in self.options.in) {
@@ -37,8 +43,24 @@ function FFmpeg(input_path, output_path, options) {
     }
 
     self._parseProgress = function(line) {
-        if (line.substring(0,5) === 'frame') {
-            self.proc.emit('progress', line);
+        if (line.substring(0, 5) === 'frame') {
+            // Values, ordered:
+            //
+            // [current frame, frames per second, q (codec dependant parameter),
+            // target size, time mark, bitrate]
+            //
+            // Regex matches series of digits, 'dot' and colons.
+            var progress_values = line.match(/[\d\.:]+/g)
+
+            var progress = {
+                frame: progress_values[0],
+                fps: progress_values[1],
+                targetSize: progress_values[3],
+                timeMark: progress_values[4],
+                kbps: progress_values[5],
+            }
+            
+            self.proc.emit('progress', progress);
         }
     }
 
@@ -49,16 +71,6 @@ function FFmpeg(input_path, output_path, options) {
 
     self.output = function(path) {
         self.output_path = path;
-        return self;
-    }
-
-    self.in = function(key, val) {
-        self._option('in', key, val);
-        return self;
-    }
-
-    self.out = function(key, val) {
-        self._option('out', key, val);
         return self;
     }
 
