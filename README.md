@@ -46,4 +46,4 @@ var h264_preset = {
 
 var ffmpeg = new FFmpeg('input_path', null, h264_preset).output('output_path');
 ffmpeg.start()
-```javascript
+```
