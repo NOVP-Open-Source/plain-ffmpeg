@@ -1,4 +1,5 @@
-var spawn = require('child_process').spawn;
+var spawn = require('child_process').spawn,
+    split = require('split');
 
 function FFmpeg(input_path, output_path, options) {
     var self = {};
@@ -15,7 +16,6 @@ function FFmpeg(input_path, output_path, options) {
 
     self._option = function(opt, key, val) {
         self.options[opt][key] = (val || null);
-        return self;
     }
 
     self._compileOptions = function() {
@@ -34,6 +34,12 @@ function FFmpeg(input_path, output_path, options) {
         }
         compiled_options.push(self.output_path);
         return compiled_options;
+    }
+
+    self._parseProgress = function(line) {
+        if (line.substring(0,5) === 'frame') {
+            self.proc.emit('progress', line);
+        }
     }
 
     self.input = function(path) {
@@ -58,6 +64,7 @@ function FFmpeg(input_path, output_path, options) {
 
     self.start = function() {
         self.proc = spawn('ffmpeg', self._compileOptions());
+        self.proc.stderr.pipe(split(/[\r\n]+/)).on('data', self._parseProgress)
         return self;
     }
 
