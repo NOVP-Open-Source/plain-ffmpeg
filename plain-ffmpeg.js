@@ -1,13 +1,13 @@
 var spawn = require('child_process').spawn;
 
-function FFmpeg(input, output, options) {
+function FFmpeg(input_path, output_path, options) {
     var self = {};
     
     var options = options || {};
 
     self.proc = null;
-    self.input = input || null;
-    self.output = output || null;
+    self.input_path = input_path  || null;
+    self.output_path = output_path || null;
     self.options = {
         in:  options.in  || {},
         out: options.out || {}
@@ -15,24 +15,35 @@ function FFmpeg(input, output, options) {
 
     self._option = function(opt, key, val) {
         self.options[opt][key] = (val || null);
+        return self;
     }
 
     self._compileOptions = function() {
-        compiled_options = [];
+        var compiled_options = [];
         for (var key in self.options.in) {
             compiled_options.push(key);
             if (self.options[key])
                 compiled_options.push(self.options[key]);
         }
         compiled_options.push('-i');
-        compiled_options.push(self.input);
+        compiled_options.push(self.input_path);
         for (var key in self.options.out) {
             compiled_options.push(key);
             if (self.options[key])
                 compiled_options.push(self.options[key]);
         }
-        compiled_options.push(self.output);
+        compiled_options.push(self.output_path);
         return compiled_options;
+    }
+
+    self.input = function(path) {
+        self.input_path = path;
+        return self;
+    }
+
+    self.output = function(path) {
+        self.output_path = path;
+        return self;
     }
 
     self.in = function(key, val) {
