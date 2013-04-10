@@ -12,33 +12,38 @@ Plain FFmpeg is really tiny library for constructing and executing FFmpeg proces
 
 One way of starting the process is:
 
-	var FFmpeg = require('./plain-ffmpeg');
-	
-	var ffmpeg = new FFmpeg();
-	
-	ffmpeg.input('http://istec.colostate.edu/me/facil/dynamics/files/drop.avi');
-	ffmpeg.output('out/video.mp4');
-	ffmpeg.in('-r', '24');
-	ffmpeg.out('-y');
-	ffmpeg.start();
-	
-	ffmpeg.proc.on('progress', function(progress) {
-		console.log(progress);
-	})
+```javascript
+var FFmpeg = require('./plain-ffmpeg');
 
+var ffmpeg = new FFmpeg();
+
+ffmpeg.input('http://istec.colostate.edu/me/facil/dynamics/files/drop.avi');
+ffmpeg.output('out/video.mp4');
+ffmpeg.in('-r', '24');
+ffmpeg.out('-y');
+ffmpeg.start();
+
+ffmpeg.proc.on('progress', function(progress) {
+	console.log(progress);
+})
+```
 All methods return the object, so you can chain them like:
 
-	var ffmpeg = new FFmpeg('input_path', 'output_path').out('-f', 'mp4').start()
+```javascript
+var ffmpeg = new FFmpeg('input_path', 'output_path').out('-f', 'mp4').start()
+```
 
 The third argument in the constructor is an `options` object, so you can pass it presets:
 
-	var h264_preset = {
-		in: {'-r', '24'},
-		out: {
-			'-c:v': 'libx264', 
-			'-c:a': 'libaac'
-		}
+```javascript
+var h264_preset = {
+	in: {'-r', '24'},
+	out: {
+		'-c:v': 'libx264', 
+		'-c:a': 'libaac'
 	}
+}
 
-	var ffmpeg = new FFmpeg('input_path', null, h264_preset).output('output_path');
-	ffmpeg.start()
+var ffmpeg = new FFmpeg('input_path', null, h264_preset).output('output_path');
+ffmpeg.start()
+```javascript
