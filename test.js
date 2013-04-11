@@ -33,7 +33,7 @@ testOptionsAreSet = function() {
 }
 
 // Test setter methods
-console.log('Testing setter methods:')
+console.log('- Testing setter methods:')
 
 ffmpeg = new FFmpeg();
 
@@ -45,7 +45,7 @@ ffmpeg.out('-y');
 testOptionsAreSet();
 
 // Test constructor
-console.log('Testing constructor:')
+console.log('- Testing constructor:')
 
 options = {
 	in: {'-r': '24'},
@@ -55,3 +55,13 @@ options = {
 ffmpeg = new FFmpeg('test_input_path', 'test_output_path', options)
 
 testOptionsAreSet();
+
+// Test progress parser
+ffmpeg = new FFmpeg();
+
+progress_string = "frame=  182 fps= 62 q=32766.0 Lsize=     301kB time=00:00:06.00 bitrate= 411.5kbits/s";
+progress_obj = {frame: '182', fps: '62', targetSize: '301', timeMark: '00:00:06.00', kbps: '411.5'};
+
+console.log(ffmpeg._parseProgress(progress_string));
+
+// TODO: test the eventEmiter

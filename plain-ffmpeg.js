@@ -1,12 +1,13 @@
 var spawn = require('child_process').spawn,
-    split = require('split');
+    split = require('split'),
+    EventEmiter = require('events').EventEmitter;
 
 function FFmpeg(input_path, output_path, options) {
     var self = {};
     
     var options = options || {};
 
-    self.proc = null;
+    self.proc = new EventEmiter();
     self.input_path = input_path  || null;
     self.output_path = output_path || null;
     self.options = {
@@ -20,8 +21,8 @@ function FFmpeg(input_path, output_path, options) {
     }
 
     // Helper methods for setting input and output options.
-    self.in  = self._option.bind(this, 'in');
-    self.out = self._option.bind(this, 'out');
+    self.in  = self._option.bind(self, 'in');
+    self.out = self._option.bind(self, 'out');
 
     // Pushes options to an array in the right order
     self._compileOptions = function() {
@@ -50,18 +51,21 @@ function FFmpeg(input_path, output_path, options) {
             // target size, time mark, bitrate]
             //
             // Regex matches series of digits, 'dot' and colons.
-            var progress_values = line.match(/[\d\.:]+/g)
+            var progressValues = line.match(/[\d.:]+/g)
 
             var progress = {
-                frame: progress_values[0],
-                fps: progress_values[1],
-                targetSize: progress_values[3],
-                timeMark: progress_values[4],
-                kbps: progress_values[5],
+                frame:      progressValues[0],
+                fps:        progressValues[1],
+                targetSize: progressValues[3],
+                timeMark:   progressValues[4],
+                kbps:       progressValues[5],
             }
             
             self.proc.emit('progress', progress);
+
+            return progress;
         }
+        return false;
     }
 
     self.input = function(path) {
@@ -74,12 +78,31 @@ function FFmpeg(input_path, output_path, options) {
         return self;
     }
 
-    self.start = function() {
-        self.proc = spawn('ffmpeg', self._compileOptions());
-        self.proc.stderr.pipe(split(/[\r\n]+/)).on('data', self._parseProgress)
+    self.start = function(callback) {
+        var proc = spawn('ffmpeg', self._compileOptions());
+        
+        // `self.proc` is the exposed EventEmitter, so we need to pass
+        // events and data from the actual process to it.
+        var default_events = ['data', 'error', 'exit', 'close', 'disconnect'];
+        default_events.forEach(function(event) {
+            proc.on(event, self.proc.emit.bind(self.proc, event));
+        })
+        
+        // FFmpeg information is written to `stderr`.
+        proc.stderr.on('data', self.proc.emit.bind(self.proc, 'info'));
+
+        // We also need to pass stderr data to a function that will
+        // filter and emit progress events. 
+        // `split` makes sure the parser will get whole lines.
+        proc.stderr.pipe(split(/[\r\n]+/)).on('data', self._parseProgress);
+
+        // Callback the actual process, in case anyone needs it.
+        if (callback)
+            callback(null, proc); // no error
+        
         return self;
     }
-
+    
     return self;
 }
 
