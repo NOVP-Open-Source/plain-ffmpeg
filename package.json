@@ -1,0 +1,25 @@
+{
+  "name": "plain-ffmpeg",
+  "version": "0.0.0",
+  "description": "Tiny FFmpeg wrapper.",
+  "main": "plain-ffmpeg.js",
+  "dependencies": {
+    "split": "~0.2.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/whoeverest/plain-ffmpeg.git"
+  },
+  "keywords": [
+    "ffmpeg",
+    "wrapper"
+  ],
+  "author": "Andrej T.",
+  "license": "BSD",
+  "readmeFilename": "README.md",
+  "gitHead": "2691e76fa00633c1513207c12c5896b04cfdb815"
+}
