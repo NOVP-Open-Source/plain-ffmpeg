@@ -88,21 +88,22 @@ function FFmpeg(input_path, output_path, options) {
             proc.on(event, self.proc.emit.bind(self.proc, event));
         })
         
-        // FFmpeg information is written to `stderr`.
+        // FFmpeg information is written to `stderr`. We'll call this
+        // the `info` event.
         proc.stderr.on('data', self.proc.emit.bind(self.proc, 'info'));
 
-        // We also need to pass stderr data to a function that will
-        // filter and emit progress events. 
-        // `split` makes sure the parser will get whole lines.
+        // We also need to pass `stderr` data to a function that will
+        // filter and emit `progress` events. 
+        // `split()` makes sure the parser will get whole lines.
         proc.stderr.pipe(split(/[\r\n]+/)).on('data', self._parseProgress);
 
-        // Callback the actual process, in case anyone needs it.
+        // Return the process object, in case anyone needs it.
         if (callback)
             callback(null, proc); // no error
         
         return self;
     }
-    
+
     return self;
 }
 
