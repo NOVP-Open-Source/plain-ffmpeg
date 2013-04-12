@@ -18,26 +18,33 @@ function FFmpeg(input_path, output_path, options) {
     // Option setter
     self._option = function(opt, key, val) {
         self.options[opt][key] = (val || null);
+        return self;
     }
 
     // Helper methods for setting input and output options.
     self.in  = self._option.bind(self, 'in');
     self.out = self._option.bind(self, 'out');
 
+    // Bind `on` events to the eventEmiter, so instead of:
+    //   ffmpeg.proc.on(event);
+    // you can write:
+    //   ffmpeg.on(event);
+    self.on = self.proc.on.bind(self.proc);
+
     // Pushes options to an array in the right order
     self._compileOptions = function() {
         var compiled_options = [];
         for (var key in self.options.in) {
             compiled_options.push(key);
-            if (self.options[key])
-                compiled_options.push(self.options[key]);
+            if (self.options.in[key])
+                compiled_options.push(self.options.in[key]);
         }
         compiled_options.push('-i');
         compiled_options.push(self.input_path);
         for (var key in self.options.out) {
             compiled_options.push(key);
-            if (self.options[key])
-                compiled_options.push(self.options[key]);
+            if (self.options.out[key])
+                compiled_options.push(self.options.out[key]);
         }
         compiled_options.push(self.output_path);
         return compiled_options;

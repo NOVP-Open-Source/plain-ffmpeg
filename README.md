@@ -23,7 +23,7 @@ ffmpeg.in('-r', '24');
 ffmpeg.out('-y');
 ffmpeg.start();
 
-ffmpeg.proc.on('progress', function(progress) {
+ffmpeg.on('progress', function(progress) {
 	console.log(progress);
 })
 ```
