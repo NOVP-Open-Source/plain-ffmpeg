@@ -33,19 +33,19 @@ testOptionsAreSet = function() {
 }
 
 // Test setter methods
-console.log('- Testing setter methods:')
+console.log('::: Testing setter methods :::');
 
 ffmpeg = new FFmpeg();
 
 ffmpeg.input('test_input_path');
 ffmpeg.output('test_output_path');
-ffmpeg.in('-r', '24')
 ffmpeg.out('-y');
+ffmpeg.in('-r', '24')
 
 testOptionsAreSet();
 
 // Test constructor
-console.log('- Testing constructor:')
+console.log('::: Testing constructor :::')
 
 options = {
 	in: {'-r': '24'},
@@ -62,6 +62,14 @@ ffmpeg = new FFmpeg();
 progress_string = "frame=  182 fps= 62 q=32766.0 Lsize=     301kB time=00:00:06.00 bitrate= 411.5kbits/s";
 progress_obj = {frame: '182', fps: '62', targetSize: '301', timeMark: '00:00:06.00', kbps: '411.5'};
 
+console.log("Parsed progress:");
 console.log(ffmpeg._parseProgress(progress_string));
 
 // TODO: test the eventEmiter
+
+ffmpeg = new FFmpeg();
+ffmpeg.on('data', function(){})
+if ('data' in ffmpeg.proc._events)
+	console.log("Binding events OK");
+else
+	console.log("Binding events FAIL");
