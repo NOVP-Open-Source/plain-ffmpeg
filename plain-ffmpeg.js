@@ -14,6 +14,10 @@ function FFmpeg(input_path, output_path, options) {
         in:  options.in  || {},
         out: options.out || {}
     };
+    self.properties = {
+        input: {},
+        output: {}
+    };
 
     // Option setter
     self._option = function(opt, key, val) {
@@ -51,28 +55,50 @@ function FFmpeg(input_path, output_path, options) {
     }
 
     self._parseProgress = function(line) {
-        if (line.substring(0, 5) === 'frame') {
-            // Values, ordered:
-            //
-            // [current frame, frames per second, q (codec dependant parameter),
-            // target size, time mark, bitrate]
-            //
-            // Regex matches series of digits, 'dot' and colons.
-            var progressValues = line.match(/[\d.:]+/g)
+        // Values, ordered:
+        //
+        // [current frame, frames per second, q (codec dependant parameter),
+        // target size, time mark, bitrate]
+        //
+        // Regex matches series of digits, 'dot' and colons.
+        var progressValues = line.match(/[\d.:]+/g)
 
-            var progress = {
-                frame:      progressValues[0],
-                fps:        progressValues[1],
-                targetSize: progressValues[3],
-                timeMark:   progressValues[4],
-                kbps:       progressValues[5],
-            }
-            
-            self.proc.emit('progress', progress);
-
-            return progress;
+        var progress = {
+            frame:      progressValues[0],
+            fps:        progressValues[1],
+            targetSize: progressValues[3],
+            timeMark:   progressValues[4],
+            kbps:       progressValues[5] || 0,  // in case of "N/A"
         }
-        return false;
+
+        return progress;
+    }
+
+    self._parseInputProperties = function(line) {
+        // Properties: [duration, start, bitrate]
+        // Note: regex matches single ':' chars, so we remove them.
+        var values = line.match(/[\d.:]+/g).filter(function(val) {
+            return val !== ':';
+        });
+
+        var properties = {
+            duration:      values[0],
+            bitrate_kbps:  values[2]
+        }
+
+        return properties;
+    }
+
+    self._handleInfo = function(line) {
+        var line = line.trim();
+        if (line.substring(0, 5) === 'frame') {
+            self.proc.emit('progress', self._parseProgress(line));
+        }
+        if (line.substring(0, 8) === 'Duration') {
+            var inputProperties = self._parseInputProperties(line);
+            self.properties.input = inputProperties;
+            self.proc.emit('properties', {from: 'input', data: inputProperties});
+        }
     }
 
     self.input = function(path) {
@@ -97,12 +123,12 @@ function FFmpeg(input_path, output_path, options) {
         
         // FFmpeg information is written to `stderr`. We'll call this
         // the `info` event.
-        proc.stderr.on('data', self.proc.emit.bind(self.proc, 'info'));
+        // `split()` makes sure the parser will get whole lines.
+        proc.stderr.pipe(split(/[\r\n]+/)).on('data', self.proc.emit.bind(self.proc, 'info'));
 
         // We also need to pass `stderr` data to a function that will
-        // filter and emit `progress` events. 
-        // `split()` makes sure the parser will get whole lines.
-        proc.stderr.pipe(split(/[\r\n]+/)).on('data', self._parseProgress);
+        // filter and emit `progress` events.
+        proc.stderr.pipe(split(/[\r\n]+/)).on('data', self._handleInfo);
 
         // Return the process object, in case anyone needs it.
         if (callback)
