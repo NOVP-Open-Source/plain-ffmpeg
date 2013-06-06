@@ -2,32 +2,12 @@ var spawn = require('child_process').spawn,
     split = require('split'),
     EventEmiter = require('events').EventEmitter;
 
-function FFmpeg(input_path, output_path, options) {
-    var self = {};
+function FFmpeg(options) {
     
-    var options = options || {};
+    var self = {};
+    self.options = options || {};
 
     self.proc = new EventEmiter();
-    self.input_path = input_path  || null;
-    self.output_path = output_path || null;
-    self.options = {
-        in:  options.in  || {},
-        out: options.out || {}
-    };
-    self.properties = {
-        input: {},
-        output: {}
-    };
-
-    // Option setter
-    self._option = function(opt, key, val) {
-        self.options[opt][key] = (val || null);
-        return self;
-    }
-
-    // Helper methods for setting input and output options.
-    self.in  = self._option.bind(self, 'in');
-    self.out = self._option.bind(self, 'out');
 
     // Bind `on` events to the eventEmiter, so instead of:
     //   ffmpeg.proc.on(event);
@@ -36,21 +16,61 @@ function FFmpeg(input_path, output_path, options) {
     self.on = self.proc.on.bind(self.proc);
 
     // Pushes options to an array in the right order
-    self._compileOptions = function() {
+    self._compileOptions = function(options) {
         var compiled_options = [];
-        for (var key in self.options.in) {
+        
+        // First set the global FFmpeg options
+        for (var key in self.options.global) {
             compiled_options.push(key);
-            if (self.options.in[key])
-                compiled_options.push(self.options.in[key]);
+            if (self.options.global[key]) {
+                compiled_options.push(self.options.global[key]);
+            }
         }
+        
+        // Remember the input path
+        var inputPath = self.options.input['-i'];
+
+        console.log(self.options.input['-i']);
+        
+        if (typeof inputPath === 'undefined') {
+            throw "Input path is not defined";
+        }
+
+        // Delete the key so it doesn't show up as a input parameter
+        // along with the other params.
+        delete self.options.input['-i'];
+
+        for (var key in self.options.input) {
+            compiled_options.push(key);
+            if (self.options.input[key]) {
+                compiled_options.push(self.options.input[key]);
+            }
+        }
+
         compiled_options.push('-i');
-        compiled_options.push(self.input_path);
-        for (var key in self.options.out) {
+        compiled_options.push(inputPath);
+
+        // The logic applied here is that the output path
+        // will be the only output parameter key that
+        // doesn't start with a "-" 
+        output_path = undefined;
+        for (var key in self.options.output) {
+            if (key[0] !== '-') {
+                // We found the output path!
+                output_path = key; continue;
+            }
             compiled_options.push(key);
-            if (self.options.out[key])
-                compiled_options.push(self.options.out[key]);
+            if (self.options.output[key]) {
+                compiled_options.push(self.options.output[key]);
+            }
         }
-        compiled_options.push(self.output_path);
+
+        if (typeof output_path === 'undefined') {
+            throw "Output path is not defined";
+        }
+        
+        compiled_options.push(output_path);
+
         return compiled_options;
     }
 
@@ -101,18 +121,10 @@ function FFmpeg(input_path, output_path, options) {
         }
     }
 
-    self.input = function(path) {
-        self.input_path = path;
-        return self;
-    }
-
-    self.output = function(path) {
-        self.output_path = path;
-        return self;
-    }
-
     self.start = function(callback) {
-        var proc = spawn('ffmpeg', self._compileOptions());
+        var proc = spawn('ffmpeg', self._compileOptions(self.options));
+
+        proc.stderr.pipe(process.stdin);
         
         // `self.proc` is the exposed EventEmitter, so we need to pass
         // events and data from the actual process to it.
