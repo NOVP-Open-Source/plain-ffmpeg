@@ -6,6 +6,7 @@ function FFmpeg(options) {
     
     var self = {};
     self.options = options || {};
+    self.properties = {};
 
     self.proc = new EventEmiter();
 
