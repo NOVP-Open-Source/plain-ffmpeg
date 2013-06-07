@@ -123,8 +123,6 @@ function FFmpeg(options) {
 
     self.start = function(callback) {
         var proc = spawn('ffmpeg', self._compileOptions(self.options));
-
-        proc.stderr.pipe(process.stdin);
         
         // `self.proc` is the exposed EventEmitter, so we need to pass
         // events and data from the actual process to it.
