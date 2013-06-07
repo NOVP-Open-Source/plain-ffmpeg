@@ -15,12 +15,17 @@ One way of starting the process is:
 ```javascript
 var FFmpeg = require('./plain-ffmpeg');
 
-var ffmpeg = new FFmpeg();
-
-ffmpeg.input('http://istec.colostate.edu/me/facil/dynamics/files/drop.avi');
-ffmpeg.output('out/video.mp4');
-ffmpeg.in('-r', '24');
-ffmpeg.out('-y');
+var ffmpeg = new FFmpeg({
+    global: {'-y': null},
+    input: {
+        '-i': 'http://domain.com/video.mp4',
+        '-r': 24
+    },
+    output: {
+        'output.mov',
+        '-c:v': 'libx264'
+    }
+});
 ffmpeg.start();
 
 ffmpeg.on('progress', function(progress) {
