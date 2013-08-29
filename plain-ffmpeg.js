@@ -29,8 +29,6 @@ function FFmpeg(options) {
         
         // Remember the input path
         var inputPath = self.options.input['-i'];
-
-        console.log(self.options.input['-i']);
         
         if (typeof inputPath === 'undefined') {
             throw "Input path is not defined";
