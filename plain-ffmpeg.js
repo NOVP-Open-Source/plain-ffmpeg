@@ -52,7 +52,7 @@ function FFmpeg(options) {
         // The logic applied here is that the output path
         // will be the only output parameter key that
         // doesn't start with a "-" 
-        output_path = undefined;
+        var output_path = undefined;
         for (var key in self.options.output) {
             if (key[0] !== '-') {
                 // We found the output path!
