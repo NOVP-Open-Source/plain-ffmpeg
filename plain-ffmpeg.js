@@ -40,8 +40,9 @@ function FFmpeg(options) {
 
         for (var key in self.options.input) {
             compiled_options.push(key);
-            if (self.options.input[key]) {
-                compiled_options.push(self.options.input[key]);
+            var val = self.options.input[key]
+            if (val !== null && typeof val !== 'undefined') {
+                compiled_options.push(val);
             }
         }
 
@@ -58,8 +59,9 @@ function FFmpeg(options) {
                 output_path = key; continue;
             }
             compiled_options.push(key);
-            if (self.options.output[key]) {
-                compiled_options.push(self.options.output[key]);
+            var val = self.options.output[key];
+            if (val !== null && typeof val !== 'undefined') {
+                compiled_options.push(val);
             }
         }
 
