@@ -30,8 +30,6 @@ function FFmpeg(options) {
         
         // Remember the input path
         var inputPath = self.options.input['-i'];
-
-        console.log(self.options.input['-i']);
         
         if (typeof inputPath === 'undefined') {
             throw "Input path is not defined";
@@ -43,8 +41,9 @@ function FFmpeg(options) {
 
         for (var key in self.options.input) {
             compiled_options.push(key);
-            if (self.options.input[key]) {
-                compiled_options.push(self.options.input[key]);
+            var val = self.options.input[key]
+            if (val !== null && typeof val !== 'undefined') {
+                compiled_options.push(val);
             }
         }
 
@@ -54,15 +53,16 @@ function FFmpeg(options) {
         // The logic applied here is that the output path
         // will be the only output parameter key that
         // doesn't start with a "-" 
-        output_path = undefined;
+        var output_path = undefined;
         for (var key in self.options.output) {
             if (key[0] !== '-') {
                 // We found the output path!
                 output_path = key; continue;
             }
             compiled_options.push(key);
-            if (self.options.output[key]) {
-                compiled_options.push(self.options.output[key]);
+            var val = self.options.output[key];
+            if (val !== null && typeof val !== 'undefined') {
+                compiled_options.push(val);
             }
         }
 
